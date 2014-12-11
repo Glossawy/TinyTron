@@ -9,4 +9,4 @@ tinyTron consists of four different gui applications:
 * **WriteServer** - Handles updates sent by the scorekeeper clients and writes accordingly to the master tournament file.
 * **Viewer** - Player client for viewing the current ranking of players and the upcoming matches in each room. 
 
-tinyTron version 1.0 using atop of Shoes 3.2.18. 
+tinyTron version 1.0 is built using Shoes 3.2.18.
