@@ -1,10 +1,11 @@
 require 'yaml'
 require './Tournament'
 
-Shoes.app(title: 'Viewer - TinyTron', width: 800, height: 600, resizable: false) do
-  @tourneyPath = 'NONE'
-  @roomID = 'NONE'
-  @none_str = ''
+Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false) do
+  @@none_str = ""
+  
+  @tourneyPath = "NONE"
+  @roomID = "NONE"
   @counter = 0
   
   @currentIndex = 0
@@ -19,7 +20,7 @@ Shoes.app(title: 'Viewer - TinyTron', width: 800, height: 600, resizable: false)
     end
     flow(width: 0.4)
     flow(width: 0.1) do
-      @timer = subtitle '0:00'
+      @timer = subtitle "0:00"
     end
   end
   
@@ -35,10 +36,10 @@ Shoes.app(title: 'Viewer - TinyTron', width: 800, height: 600, resizable: false)
     flow(height: 0.38, margin_top: 20, margin_left: 20, margin_right: 20, margin_bottom: 20) do
       border black, strokewidth: 2.5
       stack() do 
-      @m1 = tagline ''
-      @m2 = tagline ''
-      @m3 = tagline ''
-      @m4 = tagline ''
+      @m1 = tagline ""
+      @m2 = tagline ""
+      @m3 = tagline ""
+      @m4 = tagline ""
       end
     end
     #Next Three Matches
@@ -50,21 +51,21 @@ Shoes.app(title: 'Viewer - TinyTron', width: 800, height: 600, resizable: false)
   
   every(1) do   
       
-      if(@tourneyPath == 'NONE')
-             alert('Please select the tournament file.')
+      if(@tourneyPath == "NONE")
+             alert("Please select the tournament file.")
              @tourneyPath = ask_open_file
              debug "Tourney Path = #{@tourneyPath}"
             end
       
-      if(@roomID == 'NONE')
-            while(!(@roomID == 'A' || @roomID == 'B'))
-              @roomID = ask('Please enter the Room ID (A or B)').upcase
+      if(@roomID == "NONE")
+            while(!(@roomID == "A" || @roomID == "B"))
+              @roomID = ask("Please enter the Room ID (A or B)").upcase
             end
             @titleID.replace(" #{@roomID}")
       end
       
       if(@counter == 0)
-        tourneyFile = File.open(@tourneyPath,'r+')
+        tourneyFile = File.open(@tourneyPath,"r+")
         tourney = YAML.load(tourneyFile)
         updateInformation(tourney)
         tourneyFile.close
@@ -78,7 +79,7 @@ Shoes.app(title: 'Viewer - TinyTron', width: 800, height: 600, resizable: false)
    
   def updateInformation(tourney)
     
-         if(@roomID == 'A')
+         if(@roomID == "A")
             @currentIndex = tourney.indexA
             match_list = tourney.matchesA
          else
@@ -94,7 +95,7 @@ Shoes.app(title: 'Viewer - TinyTron', width: 800, height: 600, resizable: false)
          
          player_list.each do |player|
            # Do Not Include NONE Players in Leaderboards
-           if(player.name.include? 'NONE') then next end
+           if(player.name.include? "NONE") then next end
 
            @playerRankings.append{
            flow(height: 20, width: 1.0) do
@@ -106,7 +107,7 @@ Shoes.app(title: 'Viewer - TinyTron', width: 800, height: 600, resizable: false)
          
          #update Matches
          currentMatch = match_list[@currentIndex]
-         currentMatch.select{|s| s.include? 'NONE'}.each{|s| s.replace @none_str} #Convet NONE to Empty String or Otherwise
+         currentMatch.select{|s| s.include? "NONE"}.each{|s| s.replace @none_str} #Convet NONE to Empty String or Otherwise
          @m1.replace(currentMatch[0])
          @m2.replace(currentMatch[1])
          @m3.replace(currentMatch[2])
@@ -121,13 +122,13 @@ Shoes.app(title: 'Viewer - TinyTron', width: 800, height: 600, resizable: false)
           match.each do |player|
             player = player
 
-            if(player.include? 'NONE') then player = @none_str end
+            if(player.include? "NONE") then player = @none_str end
             @matches.append{
               flow(height: 21, width: 1.0){para player}
             }
           end
           @matches.append{
-            flow(height: 20, width: 1.0){para strong '----------------------------'}
+            flow(height: 20, width: 1.0){para strong("----------------------------")}
           }
         end
        end

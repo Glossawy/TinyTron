@@ -50,7 +50,7 @@ class Tournament
   end
   
   def addMatch(id, match)
-    if id == 'A'
+    if id == "A"
       matchesA.push(match)
     else
       matchesB.push(match)

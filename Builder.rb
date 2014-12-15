@@ -1,20 +1,20 @@
-require 'yaml'
+require 'yaml' 
 require './Tournament'
 
-Shoes.app(title: 'TinyTron - Builder', width: 400, height: 300) do
+Shoes.app(title: "TinyTron - Builder", width: 400, height: 300) do
     @text = edit_box(width: 1.0, height: 0.9)
 
     stack() do
-      @generate = button('Generate Tournament')
+      @generate = button("Generate Tournament")
     end
     
     @generate.click() do
-      if confirm('Are you sure that you want to generate a tournament?')
+      if confirm("Are you sure that you want to generate a tournament?")
         tourney = generateTournament
-        fileName = File.open(ask_save_file,"w+")
+        fileName = File.open(ask_save_file, "w+")
         YAML.dump(tourney,fileName)
         fileName.close 
-        alert('Success!')
+        alert("Success!")
       end
     end
     
@@ -24,14 +24,14 @@ Shoes.app(title: 'TinyTron - Builder', width: 400, height: 300) do
       playerNames = @text.text.split $/
       debug "MOD #{playerNames.size % 4.0} #{playerNames.size}"
 
-      # Account for cases where we don't have a player count that is divisible by 4
+      # Account for cases where we don"t have a player count that is divisible by 4
       (1..(4-playerNames.size % 4.0)).each { |x| playerNames.push "NONE-#{x}"}
 
       # Register with Tournament
-      playerNames.each { |name| tourney.addPlayer(Player.new name) }
+      playerNames.each { |name| tourney.addPlayer(Player.new(name)) }
 
       #Build Matches
-      gameCount = ask('How many games does each player get to play?').to_i
+      gameCount = ask("How many games does each player get to play?").to_i
       aIndex = 0
       bIndex = 0
       games = []
@@ -44,11 +44,11 @@ Shoes.app(title: 'TinyTron - Builder', width: 400, height: 300) do
       (0...games.size).each do |j|
         if j % 2 == 0
           p "A #{j} #{aIndex}"
-          tourney.addMatch('A',games[j])
+          tourney.addMatch("A",games[j])
           aIndex += 1
         else
           p "B #{j} #{bIndex}"
-          tourney.addMatch('B',games[j])
+          tourney.addMatch("B",games[j])
           bIndex += 1
         end
       end
@@ -59,7 +59,7 @@ Shoes.app(title: 'TinyTron - Builder', width: 400, height: 300) do
   def buildMatches(playerNames, matchSize)
     bigSet = []
     matchNumber = playerNames.size / matchSize
-
+    
     matchNumber.times do
       set = []
       matchSize.times do
