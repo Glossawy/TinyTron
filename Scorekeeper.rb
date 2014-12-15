@@ -1,15 +1,16 @@
 require 'yaml'
 require './Tournament'
 
-Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: true){
+Shoes.app(title: 'Scorekeeper - TinyTron', width: 800, height: 600, resizable: true){
 
   @setUp = false
-  @filePath = "NONE"
-  @updateDirectory = "NONE"
-  @roomID = "NONE"
+  @filePath = 'NONE'
+  @updateDirectory = 'NONE'
+  @roomID = 'NONE'
   
   @currentIndex = 0
-  
+
+  @updateCount = 0
   @counter = 5
 
   #Information Panel
@@ -26,24 +27,24 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
         #Players and the input boxes for their placing
         flow(){
           @line1 = edit_line(width: 50)
-          @name1 = para "Player1"
+          @name1 = para 'Player1'
         }
         flow(){
           @line2 = edit_line(width: 50)
-          @name2 = para "Player2"
+          @name2 = para 'Player2'
         }
         flow(){
           @line3 = edit_line(width: 50)
-          @name3 = para "Player3"
+          @name3 = para 'Player3'
         }
         flow(){
           @line4 = edit_line(width: 50)
-          @name4 = para "Player4"
+          @name4 = para 'Player4'
         }
       }
       #Next and Skip Button
       flow(margin_top: 10, margin_left: 20, margin_right: 20, margin_bottom: 20){
-        @next = button "Next"
+        @next = button 'Next'
       }
 
       #When clicked, verify that each textbox has a number from 0-4. If yes, put the values into an update request and refresh. 
@@ -51,7 +52,7 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
         if(p isValidInput(@line1) && isValidInput(@line2) && isValidInput(@line3) && isValidInput(@line4))
           sendUpdateRequest()
         else
-          alert("INVALID INPUT - All lines must have numbers between 0 and 4.")
+          alert('INVALID INPUT - All lines must have numbers between 0 and 4.')
         end 
       }
     }
@@ -65,42 +66,47 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
   every(1) do
     
     
-    if(@roomID == "NONE")
-      while(!(@roomID == "A" || @roomID == "B"))
-        @roomID = ask("Please enter the Room ID (A or B)").upcase
+    if(@roomID == 'NONE')
+      while(!(@roomID == 'A' || @roomID == 'B'))
+        @roomID = ask('Please enter the Room ID (A or B)').upcase
       end
       @titleID.replace(" #{@roomID}")
     end
     
-    if(@filePath == "NONE")
-      alert("Please select the tournament file.")
+    if(@filePath == 'NONE')
+      alert('Please select the tournament file.')
       @filePath = ask_open_file()
     end
     
-    if(@updateDirectory == "NONE")
-      alert("Please select the tournament update directory.")
+    if(@updateDirectory == 'NONE')
+      alert('Please select the tournament update directory.')
       @updateDirectory = ask_open_folder()
     end
     
     if(@counter == 5)
-      @counter = 0 if populate
+      @updateCount += 1
+      if populate
+        @counter = 0
+      else
+        @updateCount -= 1
+      end
     end
     
-    @counter = @counter + 1
-
-    
+    @counter += 1
   end
   
   #Unserialize tourney data, and update the Scorekeeper UI. 
-    def populate
-    
+  def populate
+
+    debug "Updating Iteration ##{@updateCount}"
+
     tourneyFile = File.open(@filePath,"r+")
     tourney = YAML.load(tourneyFile)
     tourneyFile.close
     
     #Get Current Index and a List of Players for the current room. 
     
-    if(@roomID == "A")
+    if(@roomID == 'A')
       @currentIndex = tourney.indexA
       player_list = tourney.matchesA
     else
@@ -108,12 +114,12 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
       player_list = tourney.matchesB
     end
     
-    p @currentIndex
-    p player_list.size
+    debug "Cur Index: #{@currentIndex}"
+    debug "Player List Size: #{player_list.size}"
     
     #Update the Current Match View
     if(@currentIndex >= player_list.size)
-      alert("Match Queue is now Empty. Exiting Scorekeeper. Have a nice day :D")
+      alert('Match Queue is now Empty. Exiting Scorekeeper. Have a nice day :D')
       exit()
     end
     
@@ -125,28 +131,28 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
     
     #Populate the Upcoming Match View
     upcomingMatches = player_list[@currentIndex+1..player_list.size]
-    upcomingMatchText = ""
+    upcomingMatchText = ''
     
-    p upcomingMatches
+    debug "Upcoming: #{upcomingMatches}"
     
     @upcoming.clear
-    
-    for i in 0...upcomingMatches.size
-      for j in 0...upcomingMatches[i].size
+
+    (0...upcomingMatches.size).each do |i|
+      (0...upcomingMatches[i].size).each do |j|
         upcomingMatchText = upcomingMatchText + upcomingMatches[i][j]
-        if(!(upcomingMatches[i][j] == upcomingMatches[i].last))
-          upcomingMatchText = upcomingMatchText + " vs. "
+        if(upcomingMatches[i][j] != upcomingMatches[i].last)
+          upcomingMatchText = upcomingMatchText + ' vs. '
         end
       end
-        @upcoming.append{
-          inscription upcomingMatchText
-        }
-        upcomingMatchText = ""
+      @upcoming.append{
+        para upcomingMatchText
+      }
+
+      upcomingMatchText.clear
     end
     
-    true
-    
-end
+    return true
+  end
        
     def sendUpdateRequest()
       p1 = [@name1.text,@line1.text.to_i]
@@ -156,18 +162,19 @@ end
         
       updateArray = [p1,p2,p3,p4]
       
-      p updateArray.to_yaml
+      debug 'Update Array YAML:'
+      debug updateArray.to_yaml
       
       fileName = File.new(@updateDirectory + "\\Update.#{@roomID}","w")
       YAML.dump(updateArray,fileName)
       fileName.close 
       
-     @line1.text = ""
-     @line2.text = ""
-     @line3.text = ""
-     @line4.text = ""
+     @line1.text = ''
+     @line2.text = ''
+     @line3.text = ''
+     @line4.text = ''
       
-     alert("Success!")
+     alert('Success!')
     end
     
     def isValidInput(value)
