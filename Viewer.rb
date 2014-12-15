@@ -1,9 +1,10 @@
 require 'yaml'
 require './Tournament'
 
-Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false) do
-  @tourneyPath = "NONE"
-  @roomID = "NONE"
+Shoes.app(title: 'Viewer - TinyTron', width: 800, height: 600, resizable: false) do
+  @tourneyPath = 'NONE'
+  @roomID = 'NONE'
+  @none_str = ''
   @counter = 0
   
   @currentIndex = 0
@@ -18,7 +19,7 @@ Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false)
     end
     flow(width: 0.4)
     flow(width: 0.1) do
-      @timer = subtitle "0:00"
+      @timer = subtitle '0:00'
     end
   end
   
@@ -31,17 +32,17 @@ Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false)
   #Upcoming Matches
   flow(width: 0.6, height: 0.9) do
     #Current Match
-    flow(height: 0.4, margin_top: 20, margin_left: 20, margin_right: 20, margin_bottom: 20) do 
+    flow(height: 0.38, margin_top: 20, margin_left: 20, margin_right: 20, margin_bottom: 20) do
       border black, strokewidth: 2.5
       stack() do 
-      @m1 = tagline ""
-      @m2 = tagline ""
-      @m3 = tagline ""
-      @m4 = tagline ""
+      @m1 = tagline ''
+      @m2 = tagline ''
+      @m3 = tagline ''
+      @m4 = tagline ''
       end
     end
     #Next Three Matches
-    flow(height: 0.6, margin_left: 20, margin_right: 20, margin_bottom: 20) do
+    flow(height: 0.62, margin_left: 20, margin_right: 20, margin_bottom: 20) do
       border black, strokewidth: 2.5
       @matches = stack(width: 1.0, height: 1.0)
     end
@@ -49,21 +50,21 @@ Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false)
   
   every(1) do   
       
-      if(@tourneyPath == "NONE")
-             alert("Please select the tournament file.")
+      if(@tourneyPath == 'NONE')
+             alert('Please select the tournament file.')
              @tourneyPath = ask_open_file
-             p @tourneyPath
+             debug "Tourney Path = #{@tourneyPath}"
             end
       
-      if(@roomID == "NONE")
-            while(!(@roomID == "A" || @roomID == "B"))
-              @roomID = ask("Please enter the Room ID (A or B)").upcase
+      if(@roomID == 'NONE')
+            while(!(@roomID == 'A' || @roomID == 'B'))
+              @roomID = ask('Please enter the Room ID (A or B)').upcase
             end
             @titleID.replace(" #{@roomID}")
       end
       
       if(@counter == 0)
-        tourneyFile = File.open(@tourneyPath,"r+")
+        tourneyFile = File.open(@tourneyPath,'r+')
         tourney = YAML.load(tourneyFile)
         updateInformation(tourney)
         tourneyFile.close
@@ -77,7 +78,7 @@ Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false)
    
   def updateInformation(tourney)
     
-         if(@roomID == "A")
+         if(@roomID == 'A')
             @currentIndex = tourney.indexA
             match_list = tourney.matchesA
          else
@@ -91,17 +92,21 @@ Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false)
          
          @playerRankings.clear
          
-         for i in 0...player_list.size do
+         player_list.each do |player|
+           # Do Not Include NONE Players in Leaderboards
+           if(player.name.include? 'NONE') then next end
+
            @playerRankings.append{
            flow(height: 20, width: 1.0) do
-             flow(width: 0.8){para "#{player_list[i].name}"}
-             flow(width: 0.2){para "#{player_list[i].score}"} 
+             flow(width: 0.8){para "#{player.name}"}
+             flow(width: 0.2){para "#{player.score}"}
            end
          }
          end
          
          #update Matches
          currentMatch = match_list[@currentIndex]
+         currentMatch.select{|s| s.include? 'NONE'}.each{|s| s.replace @none_str} #Convet NONE to Empty String or Otherwise
          @m1.replace(currentMatch[0])
          @m2.replace(currentMatch[1])
          @m3.replace(currentMatch[2])
@@ -109,55 +114,22 @@ Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false)
          
          @matches.clear
          
-=begin
-         if(match_list[@currentIndex - 1] != nil)
-           currentMatch = match_list[@currentIndex -1]
-           @matches.append{
-              flow(height: 20, width: 1.0){para currentMatch[0]}
-              flow(height: 20, width: 1.0){para currentMatch[1]}
-              flow(height: 20, width: 1.0){para currentMatch[2]}
-              flow(height: 20, width: 1.0){para currentMatch[3]}
-              flow(height: 20, width: 1.0){para "----------------------------"}
-           }
-         end
-         
-         if(match_list[@currentIndex - 2] != nil)
-           currentMatch = match_list[@currentIndex -2]
-           @matches.append{
-             flow(height: 20, width: 1.0){para currentMatch[0]}
-             flow(height: 20, width: 1.0){para currentMatch[1]}
-             flow(height: 20, width: 1.0){para currentMatch[2]}
-             flow(height: 20, width: 1.0){para currentMatch[3]}
-             flow(height: 20, width: 1.0){para "----------------------------"}
-           }
-         end
-         
-         if(match_list[@currentIndex - 3] != nil)
-           currentMatch = match_list[@currentIndex -3]
-           @matches.append{
-             flow(height: 20, width: 1.0){para currentMatch[0]}
-             flow(height: 20, width: 1.0){para currentMatch[1]}
-             flow(height: 20, width: 1.0){para currentMatch[2]}
-             flow(height: 20, width: 1.0){para currentMatch[3]}
-           }
-         end
-         
-=end
-         
         upComing = match_list.slice(@currentIndex+1...@currentIndex+4)
-        p upComing
+        debug upComing
 
-        for j in 0...upComing.size do
-          currentMatch = upComing[j]
+        upComing.each do |match|
+          match.each do |player|
+            player = player
+
+            if(player.include? 'NONE') then player = @none_str end
+            @matches.append{
+              flow(height: 21, width: 1.0){para player}
+            }
+          end
           @matches.append{
-            flow(height: 20, width: 1.0){para currentMatch[0]}
-            flow(height: 20, width: 1.0){para currentMatch[1]}
-            flow(height: 20, width: 1.0){para currentMatch[2]}
-            flow(height: 20, width: 1.0){para currentMatch[3]}
-            flow(height: 20, width: 1.0){para "----------------------------"}
+            flow(height: 20, width: 1.0){para strong '----------------------------'}
           }
         end
-         
        end
    
 end

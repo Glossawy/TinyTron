@@ -1,19 +1,20 @@
 require 'yaml'
 require './Tournament'
 
-Shoes.app(title: "TinyTron - Builder", width: 400, height: 300) do
+Shoes.app(title: 'TinyTron - Builder', width: 400, height: 300) do
     @text = edit_box(width: 1.0, height: 0.9)
+
     stack() do
-      @generate = button("Generate Tournament")
+      @generate = button('Generate Tournament')
     end
     
     @generate.click() do
-      if confirm("Are you sure that you want to generate a tournament?")  
+      if confirm('Are you sure that you want to generate a tournament?')
         tourney = generateTournament
         fileName = File.open(ask_save_file,"w+")
         YAML.dump(tourney,fileName)
         fileName.close 
-        alert("Success!")
+        alert('Success!')
       end
     end
     
@@ -21,64 +22,47 @@ Shoes.app(title: "TinyTron - Builder", width: 400, height: 300) do
       tourney = Tournament.new
       #Populate Players
       playerNames = @text.text.split $/
-      p "MOD #{playerNames.size % 4.0} #{playerNames.size}"
-      
-      #Elegant Code Duct Tape.
-      if(playerNames.size % 4.0 == 1)
-        playerNames.push("NONE-1")
-        playerNames.push("NONE-2")
-        playerNames.push("NONE-3")
-      elsif(playerNames.size % 4.0 == 2)
-        playerNames.push("NONE-1")
-        playerNames.push("NONE-2")
-      elsif(playerNames.size % 4.0 == 3)
-        playerNames.push("NONE-1")
-      end
-      
-      for i in 0...playerNames.size
-        tourney.addPlayer(Player.new(playerNames[i]))
-      end
-      
-      
+      debug "MOD #{playerNames.size % 4.0} #{playerNames.size}"
+
+      # Account for cases where we don't have a player count that is divisible by 4
+      (1..(4-playerNames.size % 4.0)).each { |x| playerNames.push "NONE-#{x}"}
+
+      # Register with Tournament
+      playerNames.each { |name| tourney.addPlayer(Player.new name) }
+
       #Build Matches
-      gameCount = ask("How many games does each player get to play?").to_i
-      games = []
-      
-      for k in 0...gameCount
-        games.concat(buildMatches(playerNames.dup,4))
-      end
-      
-      p games
-        
-        
+      gameCount = ask('How many games does each player get to play?').to_i
       aIndex = 0
       bIndex = 0
-      
-      p games.size
-        
-      for j in 0...(games.size)
-        
+      games = []
+
+      while(gameCount > 0)
+        games.concat(buildMatches(playerNames.dup,4))
+        gameCount -= 1
+      end
+
+      (0...games.size).each do |j|
         if j % 2 == 0
           p "A #{j} #{aIndex}"
-          tourney.addMatch("A",games[j])
-          aIndex = aIndex + 1
+          tourney.addMatch('A',games[j])
+          aIndex += 1
         else
           p "B #{j} #{bIndex}"
-          tourney.addMatch("B",games[j])
-          bIndex = bIndex + 1
+          tourney.addMatch('B',games[j])
+          bIndex += 1
         end
-        
       end
-      
-      tourney
+
+    return tourney
   end
     
   def buildMatches(playerNames, matchSize)
     bigSet = []
     matchNumber = playerNames.size / matchSize
-    for i in 0...matchNumber
+
+    matchNumber.times do
       set = []
-      for j in 0...matchSize
+      matchSize.times do
         if(set.size == 0)
           set.push(playerNames.first)
         else
@@ -89,11 +73,12 @@ Shoes.app(title: "TinyTron - Builder", width: 400, height: 300) do
       end
       bigSet.push(set)
     end
-    
+
     if playerNames.size > 0
       bigSet.push(playerNames) 
     end
-    bigSet
+
+    return bigSet
   end
 
 end
