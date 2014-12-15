@@ -1,32 +1,32 @@
 require 'yaml'
 require './Tournament'
 
-Shoes.app(title: 'WriteServer - TinyTron', width: 800, height: 600, resizable: false) do
+Shoes.app(title: "WriteServer - TinyTron", width: 800, height: 600, resizable: false) do
   
-  @updateDirectory = 'NONE'
-  @tourneyPath = 'NONE'
+  @updateDirectory = "NONE"
+  @tourneyPath = "NONE"
   
   every(1) do
     
-    if(@tourneyPath == 'NONE')
-      alert('Please select the tournament file.')
+    if(@tourneyPath == "NONE")
+      alert("Please select the tournament file.")
       @tourneyPath = ask_open_file()
       
       p @tourneyPath
       
-      tourneyFile = File.open(@tourneyPath,'r+')
+      tourneyFile = File.open(@tourneyPath,"r+")
       @tourneyCache = YAML.load(tourneyFile)
       tourneyFile.close
     end
     
-    if(@updateDirectory == 'NONE')
-      alert('Please select the tournament update directory.')
+    if(@updateDirectory == "NONE")
+      alert("Please select the tournament update directory.")
       @updateDirectory = ask_open_folder()
     end
     
     
-    if(processUpdate('A') || processUpdate('B'))
-      File.open(@tourneyPath,'w') do |h| 
+    if(processUpdate("A") || processUpdate("B"))
+      File.open(@tourneyPath,"w") do |h| 
          h.write @tourneyCache.to_yaml()
       end
     end
@@ -36,7 +36,7 @@ Shoes.app(title: 'WriteServer - TinyTron', width: 800, height: 600, resizable: f
   def processUpdate(id)
       
     if(File.file?("#{@updateDirectory}\\Update.#{id}"))
-      yamlData = File.open("#{@updateDirectory}\\Update.#{id}", 'r+')
+      yamlData = File.open("#{@updateDirectory}\\Update.#{id}", "r+")
       updateData = YAML.load(yamlData)
       p updateData
       
@@ -57,8 +57,8 @@ Shoes.app(title: 'WriteServer - TinyTron', width: 800, height: 600, resizable: f
         @tourneyCache.addScore(updateData[i][0],score)
       end
       
-      @tourneyCache.indexA = @tourneyCache.indexA + 1 if(id == 'A')
-      @tourneyCache.indexB = @tourneyCache.indexB + 1 if(id == 'B')
+      @tourneyCache.indexA = @tourneyCache.indexA + 1 if(id == "A")
+      @tourneyCache.indexB = @tourneyCache.indexB + 1 if(id == "B")
       
       yamlData.close()
       File.delete("#{@updateDirectory}\\Update.#{id}")
