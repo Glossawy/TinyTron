@@ -26,7 +26,7 @@ Shoes.app(title: "WriteServer - TinyTron", width: 800, height: 600, resizable: f
     
     
     if(processUpdate("A") || processUpdate("B"))
-      File.open(@tourneyPath,'w') do |h| 
+      File.open(@tourneyPath,"w") do |h| 
          h.write @tourneyCache.to_yaml()
       end
     end
@@ -35,12 +35,12 @@ Shoes.app(title: "WriteServer - TinyTron", width: 800, height: 600, resizable: f
   
   def processUpdate(id)
       
-    if(File.file?(@updateDirectory + "\\Update." + id))
-      yamlData = File.open(@updateDirectory + "\\Update." + id, "r+")
+    if(File.file?("#{@updateDirectory}\\Update.#{id}"))
+      yamlData = File.open("#{@updateDirectory}\\Update.#{id}", "r+")
       updateData = YAML.load(yamlData)
       p updateData
       
-      for i in 0...updateData.size do
+      (0...updateData.size).each do |i|
         score = 0
         
         case updateData[i][1]
@@ -61,7 +61,7 @@ Shoes.app(title: "WriteServer - TinyTron", width: 800, height: 600, resizable: f
       @tourneyCache.indexB = @tourneyCache.indexB + 1 if(id == "B")
       
       yamlData.close()
-      File.delete(@updateDirectory + "\\Update." + id)
+      File.delete("#{@updateDirectory}\\Update.#{id}")
       return true
     end
     

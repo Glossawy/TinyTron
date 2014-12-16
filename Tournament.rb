@@ -27,7 +27,7 @@ class Tournament
   attr_reader :players,:matchesA, :matchesB
   attr_accessor :indexA, :indexB
   
-  def initialize()
+  def initialize
     @players = []
     @matchesA = []
     @matchesB = []
@@ -41,7 +41,7 @@ class Tournament
   end
   
   def addScore(player_name, value)
-    for i in 0...players.size
+    (0...players.size).each do |i|
       if(players[i].name == player_name)
           players[i].addScore(value)
       end
@@ -50,9 +50,10 @@ class Tournament
   end
   
   def addMatch(id, match)
-    if id == "A" 
+    if id == "A"
       matchesA.push(match)
-    else matchesB.push(match)
+    else
+      matchesB.push(match)
     end
   end 
 end
