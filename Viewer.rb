@@ -2,7 +2,6 @@ require 'yaml'
 require './Tournament'
 
 Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false) do
-	@@none_str = ""
 
 	@tourneyPath = "NONE"
 	@roomID = "NONE"
