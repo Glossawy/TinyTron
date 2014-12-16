@@ -9,7 +9,8 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
   @roomID = "NONE"
   
   @currentIndex = 0
-  
+
+  @updateCount = 0
   @counter = 5
 
   #Information Panel
@@ -83,17 +84,22 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
     end
     
     if(@counter == 5)
-      @counter = 0 if populate
+      @updateCount += 1
+      if populate
+        @counter = 0
+      else
+        @updateCount -= 1
+      end
     end
     
-    @counter = @counter + 1
-
-    
+    @counter += 1
   end
   
   #Unserialize tourney data, and update the Scorekeeper UI. 
-    def populate
-    
+  def populate
+
+    debug "Updating Iteration ##{@updateCount}"
+
     tourneyFile = File.open(@filePath,"r+")
     tourney = YAML.load(tourneyFile)
     tourneyFile.close
@@ -108,8 +114,8 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
       player_list = tourney.matchesB
     end
     
-    p @currentIndex
-    p player_list.size
+    debug "Cur Index: #{@currentIndex}"
+    debug "Player List Size: #{player_list.size}"
     
     #Update the Current Match View
     if(@currentIndex >= player_list.size)
@@ -127,26 +133,26 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
     upcomingMatches = player_list[@currentIndex+1..player_list.size]
     upcomingMatchText = ""
     
-    p upcomingMatches
+    debug "Upcoming: #{upcomingMatches}"
     
     @upcoming.clear
-    
-    for i in 0...upcomingMatches.size
-      for j in 0...upcomingMatches[i].size
+
+    (0...upcomingMatches.size).each do |i|
+      (0...upcomingMatches[i].size).each do |j|
         upcomingMatchText = upcomingMatchText + upcomingMatches[i][j]
-        if(!(upcomingMatches[i][j] == upcomingMatches[i].last))
+        if(upcomingMatches[i][j] != upcomingMatches[i].last)
           upcomingMatchText = upcomingMatchText + " vs. "
         end
       end
-        @upcoming.append{
-          inscription upcomingMatchText
-        }
-        upcomingMatchText = ""
+      @upcoming.append{
+        para upcomingMatchText
+      }
+
+      upcomingMatchText.clear
     end
     
-    true
-    
-end
+    return true
+  end
        
     def sendUpdateRequest()
       p1 = [@name1.text,@line1.text.to_i]
@@ -156,7 +162,8 @@ end
         
       updateArray = [p1,p2,p3,p4]
       
-      p updateArray.to_yaml
+      debug "Update Array YAML:"
+      debug updateArray.to_yaml
       
       fileName = File.new(@updateDirectory + "\\Update.#{@roomID}","w")
       YAML.dump(updateArray,fileName)
