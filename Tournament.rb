@@ -50,6 +50,12 @@ class Tournament
 	# Add to player_name's Score
 	############################################
 	def addScore(player_name, value)
+
+		# Do not give points to NONE Players or Empty Players
+		if player_name.empty? || player_name.include?("NONE")
+			return
+		end
+
 		(0...players.size).each do |i|
 			if(players[i].name == player_name)
 				players[i].addScore(value)

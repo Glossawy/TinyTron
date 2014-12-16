@@ -184,7 +184,6 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
 		check = value.text.to_i
 		check.between?(0,4)
 	end
-
 }
 
 
