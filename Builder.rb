@@ -1,7 +1,7 @@
 require 'yaml'
 require './Tournament'
 
-Shoes.app(title: "TinyTron - Builder", width: 600, height: 500) do
+Shoes.app(title: "TinyTron - Builder", resizable: false, width: 600, height: 500) do
 	# Create Text Box and Generate Button
 	@text = edit_box(width: 1.0, height: 0.9)
 	@list_count = 0

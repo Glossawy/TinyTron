@@ -27,7 +27,7 @@ Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false)
 	#Player Rankings
 	flow(width: 0.4, height: 0.9, margin_top: 20, margin_left: 20, margin_bottom: 20) do
 		border black, strokewidth: 2.5
-		@playerRankings = stack(scroll: true, width: 1.0, height: 1.0)
+		@playerRankings = stack(scroll: true, width: 1.0, height: 1.0, margin: 10)
 	end
 
 	#Upcoming Matches
@@ -98,12 +98,15 @@ Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false)
 			if(player.name.include? "NONE") then next end
 
 			@playerRankings.append{
-				flow(height: 20, width: 1.0) do
+				flow(height: 22, width: 1.0) do
 					flow(width: 0.8){para "#{player.name}"}
 					flow(width: 0.2){para "#{player.score}"}
 				end
 			}
 		end
+
+		# Pad End with 5 pixels of space to prevent last player from being cut off
+		@playerRankings.append{flow(height:5, width:1.0)}
 
 		#update Matches
 		currentMatch = match_list[@currentIndex]
