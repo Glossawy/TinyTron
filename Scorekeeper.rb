@@ -1,7 +1,7 @@
 require 'yaml'
 require './Tournament'
 
-Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: true){
+Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: false){
 
 	@setUp = false
 	@filePath = "NONE"
@@ -20,7 +20,7 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
 	}
 
 	#Shows the current match.
-	flow(width: 0.5, height: 0.90){
+	flow(width: 0.35, height: 0.90){
 		border black, strokewidth: 2.5
 		stack(){
 			flow(margin_top: 20, margin_left: 20, margin_right: 20, margin_bottom: 20){
@@ -42,10 +42,20 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
 					@name4 = para "Player4"
 				}
 			}
-			#Next and Skip Button
-			flow(margin_top: 10, margin_left: 20, margin_right: 20, margin_bottom: 20){
-				@next = button "Next"
+			#Next Button
+			flow(margin: 20, margin_top: 10){
+				@next = button "Submit & Move To Next Match"
 			}
+
+			flow(margin_top: 10, margin_left: 50) {
+				@trunc_last_names = check;
+				@trunc_last_names.checked = true
+				para "Truncate Last Names"
+			}
+
+			@trunc_last_names.click() do
+				populate
+			end
 
 			#When clicked, verify that each textbox has a number from 0-4. If yes, put the values into an update request and refresh.
 			@next.click(){
@@ -58,10 +68,10 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
 		}
 	}
 	#Shows all upcoming matches
-	flow(width: 0.5, height: 0.90){
+	flow(width: 0.65, height: 0.90) do
 		border black, strokewidth: 2.5
-		@upcoming = stack(scroll: true, width: 350, height: 500)
-	}
+		@upcoming = stack(scroll: true, width: 1.0, height: 1.0)
+	end
 
 	every(1) do
 
@@ -134,24 +144,24 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
 
 		#Populate the Upcoming Match View
 		upcomingMatches = player_list[@currentIndex+1..player_list.size]
-		upcomingMatchText = ""
-
 		log "Upcoming: #{upcomingMatches}"
-
 		@upcoming.clear
 
+		# TODO Sanitize to upcomingMatches.each
 		(0...upcomingMatches.size).each do |i|
+			upcomingMatchText = ""
+			sanitize_players(upcomingMatches[i])
 			(0...upcomingMatches[i].size).each do |j|
-				upcomingMatchText = upcomingMatchText + upcomingMatches[i][j]
+				if upcomingMatches[i][j].empty? then next end
+
+				upcomingMatchText = upcomingMatchText + trim_name(upcomingMatches[i][j], @trunc_last_names.checked?)
 				if(upcomingMatches[i][j] != upcomingMatches[i].last)
 					upcomingMatchText = upcomingMatchText + " vs. "
 				end
 			end
 			@upcoming.append{
-				para upcomingMatchText
+				para upcomingMatchText, margin: 10, margin_right: 15, size: "xx-small"
 			}
-
-			upcomingMatchText.clear
 		end
 
 		return true
@@ -180,7 +190,26 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: t
 		alert("Success!")
 	end
 
+	def trim_name(name, bool_check=true)
+		if !bool_check then return name end
+
+		new_name = ""
+		bits = name.split ' '
+
+		bits.each do |part|
+			if(part == bits.first)
+				new_name = part
+			else
+				new_name += " #{part.slice(0).upcase}."
+			end
+		end
+
+		return new_name
+	end
+
 	def isValidInput(value)
+		if value.text.empty? then return false end
+
 		check = value.text.to_i
 		check.between?(0,4)
 	end

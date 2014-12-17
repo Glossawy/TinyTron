@@ -6,6 +6,34 @@ Shoes.app(title: "WriteServer - TinyTron", width: 800, height: 600, resizable: f
 	@updateDirectory = "NONE"
 	@tourneyPath = "NONE"
 
+	stack(height: 0.5, width: 1.0, margin: 10) do
+		subtitle "System Info"
+
+		flow(scroll: true, height: 0.8, width: 1.0, margin_bottom: 10) do
+			border black, strokewidth: 2.5
+			stack(scroll: true, height: 1.0, width: 1.0, margin: 10) do
+				ENV.each_key do |key|
+					flow(height: 20, width:1.0){
+						inscription strong("#{key}:")
+						inscription ENV[key]
+					}
+				end
+			end
+		end
+	end
+
+	stack(height: 0.5, width: 1.0, margin: 10) do
+		subtitle "TinyTron Server Parameters"
+		flow(height: 0.8, width: 1.0) do
+			border black, strokewidth: 2.5
+			stack scroll: true, height: 1.0, width: 1.0, margin: 10 do
+				@updateInsc = flow height: 20
+				@tourneyInsc = flow height: 20
+				@cacheInsc = stack margin_top: 10
+			end
+		end
+	end
+
 	every(1) do
 
 		if(@tourneyPath == "NONE")
@@ -24,13 +52,13 @@ Shoes.app(title: "WriteServer - TinyTron", width: 800, height: 600, resizable: f
 			@updateDirectory = ask_open_folder()
 		end
 
-
 		if(processUpdate("A") || processUpdate("B"))
 			File.open(@tourneyPath,"w") do |h|
 				h.write @tourneyCache.to_yaml()
 			end
 		end
 
+		update_param_info
 	end
 
 	def processUpdate(id)
@@ -68,4 +96,25 @@ Shoes.app(title: "WriteServer - TinyTron", width: 800, height: 600, resizable: f
 		return false
 	end
 
+	def update_param_info
+		info = {"Update Dir" => @updateDirectory, "Tourney Path" => @tourneyPath, "Current Cache" => "\n#{@tourneyCache}"}
+
+		@updateInsc.clear
+		@updateInsc.append{
+			inscription strong("Update Directory: ")
+			inscription @updateDirectory
+		}
+
+		@tourneyInsc.clear
+		@tourneyInsc.append{
+			inscription strong("Tourney Path: ")
+			inscription @tourneyPath
+		}
+
+		@cacheInsc.clear
+		@cacheInsc.append{
+			inscription strong("Cached YAML Data:"), margin_bottom: 0
+			inscription @tourneyCache
+		}
+	end
 end
