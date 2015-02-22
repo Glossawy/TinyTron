@@ -60,7 +60,7 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: f
 			#When clicked, verify that each textbox has a number from 0-4. If yes, put the values into an update request and refresh.
 			@next.click(){
 				if(p isValidInput(@line1) && isValidInput(@line2) && isValidInput(@line3) && isValidInput(@line4))
-					sendUpdateRequest()
+					send_update_request()
 				else
 					alert("INVALID INPUT - All lines must have numbers between 0 and 4.")
 				end
@@ -73,9 +73,8 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: f
 		@upcoming = stack(scroll: true, width: 1.0, height: 1.0)
 	end
 
+	# See WriteServer.rb for Dissent
 	every(1) do
-
-
 		if(@roomID == "NONE")
 			while(!(@roomID == "A" || @roomID == "B"))
 				@roomID = ask("Please enter the Room ID (A or B)").upcase
@@ -86,6 +85,7 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: f
 		if(@filePath == "NONE")
 			alert("Please select the tournament file.")
 			@filePath = ask_open_file()
+			populate
 		end
 
 		if(@updateDirectory == "NONE")
@@ -93,7 +93,7 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: f
 			@updateDirectory = ask_open_folder()
 		end
 
-		if(@counter == 5)
+		if(@counter >= 5)
 			@updateCount += 1
 			if populate
 				@counter = 0
@@ -105,12 +105,11 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: f
 		@counter += 1
 	end
 
-	#Unserialize tourney data, and update the Scorekeeper UI.
+	# Deserialize tourney data, and update the Scorekeeper UI.
 	def populate
-
 		log "Updating Iteration ##{@updateCount}"
 
-		tourneyFile = File.open(@filePath,"r+")
+		tourneyFile = File.open(@filePath,"r")
 		tourney = YAML.load(tourneyFile)
 		tourneyFile.close
 
@@ -135,7 +134,7 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: f
 
 
 		currentMatch = player_list[@currentIndex]
-		sanitize_players(currentMatch)
+		sanitize_players(currentMatch, "N/A")
 
 		@name1.replace(currentMatch[0])
 		@name2.replace(currentMatch[1])
@@ -150,12 +149,19 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: f
 		# TODO Sanitize to upcomingMatches.each
 		(0...upcomingMatches.size).each do |i|
 			upcomingMatchText = ""
+
 			sanitize_players(upcomingMatches[i])
 			(0...upcomingMatches[i].size).each do |j|
-				if upcomingMatches[i][j].empty? then next end
+				if upcomingMatches[i][j].strip.empty? then
+					if(!(upcomingMatches[i][j] == upcomingMatches[i].last || upcomingMatches[i][j+1].strip.empty?) && (j > 0 && !upcomingMatchs[i][j-1].strip.empty?))
+						upcomingMatchText = upcomingMatchText + " vs. "
+					end
+					next
+				end
 
 				upcomingMatchText = upcomingMatchText + trim_name(upcomingMatches[i][j], @trunc_last_names.checked?)
-				if(upcomingMatches[i][j] != upcomingMatches[i].last)
+
+				if(!(upcomingMatches[i][j] == upcomingMatches[i].last || upcomingMatches[i][j+1].strip.empty?))
 					upcomingMatchText = upcomingMatchText + " vs. "
 				end
 			end
@@ -167,7 +173,12 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: f
 		return true
 	end
 
-	def sendUpdateRequest()
+	#######################################################################################
+	# Extracts User Information, writes into an Array and then writes that out to a YAML file
+	#
+	# This will block while the last Update File still exists
+	######################################################################################
+	def send_update_request()
 		p1 = [@name1.text,@line1.text.to_i]
 		p2 = [@name2.text,@line2.text.to_i]
 		p3 = [@name3.text,@line3.text.to_i]
@@ -178,7 +189,12 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: f
 		log "Update Array YAML:"
 		log updateArray.to_yaml
 
-		fileName = File.new(@updateDirectory + "\\Update.#{@roomID}","w")
+
+		while(File.file?(@updateDirectory + "\\Update.#{@roomID}"))
+			sleep 1
+		end
+
+		fileName = File.open(@updateDirectory + "\\Update.#{@roomID}","w")
 		YAML.dump(updateArray,fileName)
 		fileName.close
 
@@ -190,6 +206,11 @@ Shoes.app(title: "Scorekeeper - TinyTron", width: 800, height: 600, resizable: f
 		alert("Success!")
 	end
 
+	#######################################################################################
+	# Trims every word except for the first in any string. Such That:
+	# 'Foo Bar' becomes 'Foo B.'
+	# 'Fizz Buzz FizzBuzz' becomes 'Fizz B. F.'
+	######################################################################################
 	def trim_name(name, bool_check=true)
 		if !bool_check then return name end
 
