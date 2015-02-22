@@ -1,7 +1,8 @@
 require 'yaml'
 require './Tournament'
+require './ListLoader'
 
-Shoes.app(title: "TinyTron - Builder", resizable: false, width: 600, height: 500) do
+Shoes.app(title: "TinyTron - Builder", resizable: false, width: 650, height: 500) do
 	# Create Text Box and Generate Button
 	@text = edit_box(width: 1.0, height: 0.9)
 	@list_count = 0
@@ -11,15 +12,62 @@ Shoes.app(title: "TinyTron - Builder", resizable: false, width: 600, height: 500
 		flow() do
 			@generate = button("Generate Tournament")
 			@sorter = button("Sort Current List")
-			@total = para "Currently Counting #{@list_count} players"
+			@loader = button("Load From File")
+			@total = para "#{@list_count} Players"
 		end
 	end
 
+	####################################################################
+	# Load List of Players from Either a CSV or standard text file
+	####################################################################
+	@loader.click() do
+		path = ask_open_file
+		tmp_str = ""
+
+		if path.downcase.include? ".csv"
+			loader = CSVLoader.new
+		elsif path.downcase.include? ".yml"
+			loader = YAMLLoader.new
+		else
+			loader = LineLoader.new
+		end
+
+		log "Loading using LoaderType #{loader.get_list_type} from file at #{path}"
+
+		loader.load_list(path)
+		loader.list.each { |e| tmp_str += "#{e.strip}\n"}
+
+		@text.text = tmp_str
+	end
+
+	#######################################################################################
+	# Sort Current List, Alternate between A-Z Sort and Z-A Sort (If Already A-Z)
+	# Although the extra sort for comparison may be slightly more expensive, ideally
+	# it will run in pretty close to O(N) time if already sorted.
+	######################################################################################
 	@sorter.click() do
 		temp_str = ""
-		@player_cache.sort_by!{|m| m.downcase}
+		equal_cache = true
 
-		for name in @player_cache
+		# Sort Player Cache and return as new array to temp_cache, check for array equality
+		temp_cache = @player_cache.sort {|x, y| x.downcase <=> y.downcase}
+		(0...temp_cache.size).each do |i|
+			if temp_cache[i] != @player_cache[i]
+				equal_cache = false
+				break
+			end
+		end
+
+		# If @player_cache was not already sorted, replace it with the sorted cache
+		# If @player_cache was sorted, sorted in place in order of Z-A
+		if !equal_cache
+			@player_cache = temp_cache
+		else
+			@player_cache.sort!{|x, y| y.downcase <=> x.downcase}
+		end
+
+		# Create one String and set text in EditText
+		@player_cache.each do |name|
 			temp_str += name + "\n"
 		end
 
@@ -37,9 +85,10 @@ Shoes.app(title: "TinyTron - Builder", resizable: false, width: 600, height: 500
 		end
 	end
 
+	# Every 1 Second
 	every(1) do
 		@list_count = getListSize
-		@total.text = "Currently Counting #{@list_count} players"
+		@total.text = "#{@list_count} Players"
 		log "#{@list_count} -> #{@total.text}"
 	end
 
