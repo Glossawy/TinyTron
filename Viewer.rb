@@ -64,10 +64,10 @@ Shoes.app(title: "Viewer - TinyTron", width: 800, height: 600, resizable: false)
 		end
 
 		if(@counter == 0)
-			tourneyFile = File.open(@tourneyPath,"r+")
+			tourneyFile = File.open(@tourneyPath,"r")
 			tourney = YAML.load(tourneyFile)
-			updateInformation(tourney)
 			tourneyFile.close
+			updateInformation tourney
 			@counter = 5
 		else
 			@counter = @counter - 1
